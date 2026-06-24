@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BI Reportes — Mohicano Jeans</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top-bar">
+  <span class="top-bar-title">BI Reportes</span>
+  <span class="top-bar-sub">Mohicano Jeans</span>
+</header>
+
+<nav class="report-nav">
+  <button class="nav-btn is-active" data-target="sec-mejores">Mejores Clientes</button>
+  <button class="nav-btn" data-target="sec-nocompraron">No Compraron</button>
+  <button class="nav-btn" data-target="sec-modelo">Modelo / Bota</button>
+</nav>
+
+<!-- ── Mejores Clientes ─────────────────────────────────── -->
+<section id="sec-mejores" class="report-section">
+  <div class="section-head">
+    <h2>Mejores Clientes</h2>
+    <span class="section-meta">{{ mejores_clientes.rows | length }} clientes con ventas &middot; T{{ mejores_clientes.temporadas | join(', T') }}</span>
+  </div>
+  {% if mejores_clientes.available %}
+  <div class="table-tools">
+    <input type="text" id="searchMejores" placeholder="Buscar cliente o RUT..." autocomplete="off">
+  </div>
+  <div class="table-wrap">
+  <table id="tablaMejores" class="bi-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Cliente</th>
+        <th>RUT</th>
+        <th class="num">Documentos</th>
+        <th class="num">Prendas</th>
+        <th class="num">Total ($)</th>
+        <th>Temporadas</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in mejores_clientes.rows %}
+    <tr data-search="{{ row.cliente | lower }} {{ row.rut }}">
+      <td class="num rank">{{ loop.index }}</td>
+      <td><strong>{{ row.cliente }}</strong></td>
+      <td class="rut">{{ row.rut }}</td>
+      <td class="num">{{ row.documentos }}</td>
+      <td class="num">{{ "{:,.0f}".format(row.prendas).replace(",",".") }}</td>
+      <td class="num total-cell">{{ "${:,.0f}".format(row.total).replace(",",".") }}</td>
+      <td class="temps">T{{ row.temporadas.replace(", ", " · T") }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="empty-msg">Sin datos de ventas disponibles.</p>
+  {% endif %}
+</section>
+
+<!-- ── No Compraron ────────────────────────────────────── -->
+<section id="sec-nocompraron" class="report-section" hidden>
+  <div class="section-head">
+    <h2>Clientes que No Compraron en T43/T44</h2>
+    <span class="section-meta">{{ no_compraron.total }} clientes activos en T40-T42 sin compras en temporada actual</span>
+  </div>
+  {% if no_compraron.available %}
+  <div class="table-tools">
+    <input type="text" id="searchNoCompraron" placeholder="Buscar cliente o RUT..." autocomplete="off">
+  </div>
+  <div class="table-wrap">
+  <table id="tablaNoCompraron" class="bi-table">
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>RUT</th>
+        <th>Última Temporada</th>
+        <th>Temporadas Activas</th>
+        <th class="num">Total Histórico ($)</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in no_compraron.rows %}
+    <tr data-search="{{ row.cliente | lower }} {{ row.rut }}">
+      <td><strong>{{ row.cliente }}</strong></td>
+      <td class="rut">{{ row.rut }}</td>
+      <td class="tag-temp">{{ row.ultima_temp }}</td>
+      <td class="temps">{{ row.temporadas_activas }}</td>
+      <td class="num">{{ "${:,.0f}".format(row.total_historico).replace(",",".") }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="empty-msg">Sin datos disponibles.</p>
+  {% endif %}
+</section>
+
+<!-- ── Modelo / Bota ───────────────────────────────────── -->
+<section id="sec-modelo" class="report-section" hidden>
+  <div class="section-head">
+    <h2>Pedidos por Bota / Modelo</h2>
+    {% if modelo_bota.available %}
+    <span class="section-meta">
+      {{ "{:,.0f}".format(modelo_bota.total_solicitado).replace(",",".") }} solicitadas &middot;
+      {{ "{:,.0f}".format(modelo_bota.total_despachado).replace(",",".") }} despachadas &middot;
+      {{ "{:,.0f}".format(modelo_bota.total_saldo).replace(",",".") }} saldo
+    </span>
+    {% endif %}
+  </div>
+
+  {% if modelo_bota.available %}
+  <!-- Por bota -->
+  <h3 class="sub-title">Por Tipo de Bota (SubCateg)</h3>
+  <div class="table-wrap">
+  <table class="bi-table">
+    <thead>
+      <tr>
+        <th>Bota</th>
+        <th class="num">Clientes</th>
+        <th class="num">Solicitado</th>
+        <th class="num">Despachado</th>
+        <th class="num">Saldo</th>
+        <th class="num">% Despacho</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for b in modelo_bota.botas %}
+    <tr>
+      <td><strong>{{ b.bota }}</strong></td>
+      <td class="num">{{ b.clientes }}</td>
+      <td class="num">{{ "{:,.0f}".format(b.solicitado).replace(",",".") }}</td>
+      <td class="num">{{ "{:,.0f}".format(b.despachado).replace(",",".") }}</td>
+      <td class="num {% if b.saldo > 0 %}saldo-pendiente{% endif %}">{{ "{:,.0f}".format(b.saldo).replace(",",".") }}</td>
+      <td class="num">
+        <div class="pct-bar-wrap">
+          <div class="pct-bar" style="width:{{ [b.pct_despachado, 100] | min }}%"></div>
+          <span>{{ b.pct_despachado }}%</span>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <!-- Por modelo -->
+  <h3 class="sub-title" style="margin-top:2rem">Por Modelo (Artículo)</h3>
+  <div class="table-tools">
+    <input type="text" id="searchModelo" placeholder="Buscar artículo o descripción..." autocomplete="off">
+  </div>
+  <div class="table-wrap">
+  <table id="tablaModelo" class="bi-table">
+    <thead>
+      <tr>
+        <th>Artículo</th>
+        <th>Descripción</th>
+        <th>Bota</th>
+        <th class="num">Solicitado</th>
+        <th class="num">Despachado</th>
+        <th class="num">Saldo</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for m in modelo_bota.modelos %}
+    <tr data-search="{{ m.articulo }} {{ m.descripcion | lower }} {{ m.bota | lower }}">
+      <td><strong>{{ m.articulo }}</strong></td>
+      <td>{{ m.descripcion }}</td>
+      <td class="bota-tag">{{ m.bota }}</td>
+      <td class="num">{{ "{:,.0f}".format(m.solicitado).replace(",",".") }}</td>
+      <td class="num">{{ "{:,.0f}".format(m.despachado).replace(",",".") }}</td>
+      <td class="num {% if m.saldo > 0 %}saldo-pendiente{% endif %}">{{ "{:,.0f}".format(m.saldo).replace(",",".") }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="empty-msg">Carga PEDIDOS.Txt en la carpeta seed/ para ver este reporte.</p>
+  {% endif %}
+</section>
+
+<script>
+// Navegación entre secciones
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('is-active'));
+    document.querySelectorAll('.report-section').forEach(s => s.hidden = true);
+    btn.classList.add('is-active');
+    document.getElementById(btn.dataset.target).hidden = false;
+  });
+});
+
+// Búsqueda en tablas
+function setupSearch(inputId, tableId) {
+  const input = document.getElementById(inputId);
+  const table = document.getElementById(tableId);
+  if (!input || !table) return;
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase();
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      tr.hidden = q && !tr.dataset.search.includes(q);
+    });
+  });
+}
+setupSearch('searchMejores', 'tablaMejores');
+setupSearch('searchNoCompraron', 'tablaNoCompraron');
+setupSearch('searchModelo', 'tablaModelo');
+</script>
+</body>
+</html>

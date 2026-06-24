@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+data/
+logs/auto_build.log
+seed/PEDIDOS.Txt
+seed/VENTAS-TOD-2026.CSV
+*.db
