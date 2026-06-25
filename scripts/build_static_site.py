@@ -35,7 +35,6 @@ def main() -> None:
         else:
             html = str(html)
 
-    html = html.replace('href="styles.css"', 'href="styles.css"')
     html = html.replace('href="/static/styles.css"', 'href="styles.css"')
 
     DOCS_DIR.mkdir(exist_ok=True)

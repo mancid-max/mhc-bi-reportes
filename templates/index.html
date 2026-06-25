@@ -4,212 +4,414 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BI Reportes — Mohicano Jeans</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-<header class="top-bar">
-  <span class="top-bar-title">BI Reportes</span>
-  <span class="top-bar-sub">Mohicano Jeans</span>
-</header>
 
-<nav class="report-nav">
-  <button class="nav-btn is-active" data-target="sec-mejores">Mejores Clientes</button>
-  <button class="nav-btn" data-target="sec-nocompraron">No Compraron</button>
-  <button class="nav-btn" data-target="sec-modelo">Modelo / Bota</button>
-</nav>
+<!-- ── Barra móvil ── -->
+<div class="mobile-header">
+  <button class="hamburger" id="hamburger" aria-label="Abrir menú">
+    <span></span><span></span><span></span>
+  </button>
+  <span class="mobile-title">BI Reportes · Mohicano Jeans</span>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<!-- ── Mejores Clientes ─────────────────────────────────── -->
-<section id="sec-mejores" class="report-section">
-  <div class="section-head">
-    <h2>Mejores Clientes</h2>
-    <span class="section-meta">{{ mejores_clientes.rows | length }} clientes con ventas &middot; T{{ mejores_clientes.temporadas | join(', T') }}</span>
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-logo">MJ</div>
+    <div class="brand-text">
+      <div class="brand-name">Mohicano Jeans</div>
+      <div class="brand-sub">BI Reportes</div>
+    </div>
   </div>
-  {% if mejores_clientes.available %}
-  <div class="table-tools">
-    <input type="text" id="searchMejores" placeholder="Buscar cliente o RUT..." autocomplete="off">
+  <nav class="sidebar-nav">
+    <button class="nav-item is-active" data-target="sec-mejores">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg>
+      Mejores Clientes
+    </button>
+    <button class="nav-item" data-target="sec-nocompraron">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.553.553 0 0 1-1.1 0L7.1 4.995z"/></svg>
+      No Compraron
+    </button>
+    <button class="nav-item" data-target="sec-modelo">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2zm9 0H6v5h4V2zm0 6H6v5h4V8zM5 2H2v5h3V2zm0 6H2v5h3V8zm6 0v5h3V8h-3zm0-6v5h3V2h-3z"/></svg>
+      Modelo / Bota
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="season-label">Colecciones</div>
+    <div class="season-pills">
+      <span class="season-pill">C40</span>
+      <span class="season-pill">C41</span>
+      <span class="season-pill">C42</span>
+      <span class="season-pill active">C43</span>
+    </div>
   </div>
-  <div class="table-wrap">
-  <table id="tablaMejores" class="bi-table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Cliente</th>
-        <th>RUT</th>
-        <th class="num">Documentos</th>
-        <th class="num">Prendas</th>
-        <th class="num">Total ($)</th>
-        <th>Temporadas</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for row in mejores_clientes.rows %}
-    <tr data-search="{{ row.cliente | lower }} {{ row.rut }}">
-      <td class="num rank">{{ loop.index }}</td>
-      <td><strong>{{ row.cliente }}</strong></td>
-      <td class="rut">{{ row.rut }}</td>
-      <td class="num">{{ row.documentos }}</td>
-      <td class="num">{{ "{:,.0f}".format(row.prendas).replace(",",".") }}</td>
-      <td class="num total-cell">{{ "${:,.0f}".format(row.total).replace(",",".") }}</td>
-      <td class="temps">T{{ row.temporadas.replace(", ", " · T") }}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  </div>
-  {% else %}
-  <p class="empty-msg">Sin datos de ventas disponibles.</p>
-  {% endif %}
-</section>
+</aside>
 
-<!-- ── No Compraron ────────────────────────────────────── -->
-<section id="sec-nocompraron" class="report-section" hidden>
-  <div class="section-head">
-    <h2>Clientes que No Compraron en T43/T44</h2>
-    <span class="section-meta">{{ no_compraron.total }} clientes activos en T40-T42 sin compras en temporada actual</span>
-  </div>
-  {% if no_compraron.available %}
-  <div class="table-tools">
-    <input type="text" id="searchNoCompraron" placeholder="Buscar cliente o RUT..." autocomplete="off">
-  </div>
-  <div class="table-wrap">
-  <table id="tablaNoCompraron" class="bi-table">
-    <thead>
-      <tr>
-        <th>Cliente</th>
-        <th>RUT</th>
-        <th>Última Temporada</th>
-        <th>Temporadas Activas</th>
-        <th class="num">Total Histórico ($)</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for row in no_compraron.rows %}
-    <tr data-search="{{ row.cliente | lower }} {{ row.rut }}">
-      <td><strong>{{ row.cliente }}</strong></td>
-      <td class="rut">{{ row.rut }}</td>
-      <td class="tag-temp">{{ row.ultima_temp }}</td>
-      <td class="temps">{{ row.temporadas_activas }}</td>
-      <td class="num">{{ "${:,.0f}".format(row.total_historico).replace(",",".") }}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  </div>
-  {% else %}
-  <p class="empty-msg">Sin datos disponibles.</p>
-  {% endif %}
-</section>
+<!-- ── Contenido principal ── -->
+<main class="main-content">
 
-<!-- ── Modelo / Bota ───────────────────────────────────── -->
-<section id="sec-modelo" class="report-section" hidden>
-  <div class="section-head">
-    <h2>Pedidos por Bota / Modelo</h2>
-    {% if modelo_bota.available %}
-    <span class="section-meta">
-      {{ "{:,.0f}".format(modelo_bota.total_solicitado).replace(",",".") }} solicitadas &middot;
-      {{ "{:,.0f}".format(modelo_bota.total_despachado).replace(",",".") }} despachadas &middot;
-      {{ "{:,.0f}".format(modelo_bota.total_saldo).replace(",",".") }} saldo
-    </span>
+  <!-- ── MEJORES CLIENTES ── -->
+  <section id="sec-mejores" class="report-section">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Mejores Clientes</h1>
+      </div>
+      <div class="cole-filter" id="filterMejores">
+        <span class="filter-label">Colección</span>
+        <button class="filter-btn" data-cole="40">C40</button>
+        <button class="filter-btn" data-cole="41">C41</button>
+        <button class="filter-btn" data-cole="42">C42</button>
+        <button class="filter-btn is-active" data-cole="43">C43</button>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Clientes Activos</div>
+        <div class="kpi-value" id="mc-clientes">—</div>
+      </div>
+      <div class="kpi-card kpi-card--accent">
+        <div class="kpi-label">Ventas Totales</div>
+        <div class="kpi-value" id="mc-ventas">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Prendas</div>
+        <div class="kpi-value" id="mc-prendas">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Top Cliente</div>
+        <div class="kpi-value kpi-value--sm" id="mc-top">—</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-title">Top 10 Clientes por Ventas</div>
+      <div class="chart-wrap"><canvas id="chartMejores"></canvas></div>
+    </div>
+
+    <div class="table-tools">
+      <input type="text" id="searchMejores" placeholder="Buscar cliente o RUT..." autocomplete="off">
+    </div>
+    <div class="table-wrap">
+      <table id="tablaMejores" class="bi-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>RUT</th>
+            <th class="num">Docs</th>
+            <th class="num">Prendas</th>
+            <th class="num">Total ($)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── NO COMPRARON ── -->
+  <section id="sec-nocompraron" class="report-section" hidden>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Clientes que No Compraron</h1>
+      </div>
+    </div>
+
+    {% if no_compraron.available %}
+    <div class="kpi-row">
+      <div class="kpi-card kpi-card--danger">
+        <div class="kpi-label">Clientes Inactivos</div>
+        <div class="kpi-value">{{ no_compraron.total }}</div>
+        <div class="kpi-sub">sin compras esta temporada</div>
+      </div>
+    </div>
+    <div class="table-tools">
+      <input type="text" id="searchNoCompraron" placeholder="Buscar cliente o RUT..." autocomplete="off">
+    </div>
+    <div class="table-wrap">
+      <table id="tablaNoCompraron" class="bi-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>RUT</th>
+            <th class="num">Prendas C42</th>
+            <th class="num">Total C42 ($)</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for row in no_compraron.rows %}
+        <tr data-search="{{ row.cliente | lower }} {{ row.rut }}">
+          <td class="rank">{{ loop.index }}</td>
+          <td class="cliente-name">{{ row.cliente }}</td>
+          <td class="rut">{{ row.rut }}</td>
+          <td class="num">{{ "{:,.0f}".format(row.prendas_c42).replace(",",".") }}</td>
+          <td class="num total-cell">${{ "{:,.0f}".format(row.total_historico).replace(",",".") }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">Sin datos disponibles.</div>
     {% endif %}
-  </div>
+  </section>
 
-  {% if modelo_bota.available %}
-  <!-- Por bota -->
-  <h3 class="sub-title">Por Tipo de Bota (SubCateg)</h3>
-  <div class="table-wrap">
-  <table class="bi-table">
-    <thead>
-      <tr>
-        <th>Bota</th>
-        <th class="num">Clientes</th>
-        <th class="num">Solicitado</th>
-        <th class="num">Despachado</th>
-        <th class="num">Saldo</th>
-        <th class="num">% Despacho</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for b in modelo_bota.botas %}
-    <tr>
-      <td><strong>{{ b.bota }}</strong></td>
-      <td class="num">{{ b.clientes }}</td>
-      <td class="num">{{ "{:,.0f}".format(b.solicitado).replace(",",".") }}</td>
-      <td class="num">{{ "{:,.0f}".format(b.despachado).replace(",",".") }}</td>
-      <td class="num {% if b.saldo > 0 %}saldo-pendiente{% endif %}">{{ "{:,.0f}".format(b.saldo).replace(",",".") }}</td>
-      <td class="num">
-        <div class="pct-bar-wrap">
-          <div class="pct-bar" style="width:{{ [b.pct_despachado, 100] | min }}%"></div>
-          <span>{{ b.pct_despachado }}%</span>
-        </div>
-      </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  </div>
+  <!-- ── MODELO / BOTA ── -->
+  <section id="sec-modelo" class="report-section" hidden>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Pedidos por Bota / Modelo</h1>
+      </div>
+      <div class="cole-filter" id="filterModelo">
+        <span class="filter-label">Colección</span>
+        <button class="filter-btn" data-cole="40">C40</button>
+        <button class="filter-btn" data-cole="41">C41</button>
+        <button class="filter-btn" data-cole="42">C42</button>
+        <button class="filter-btn is-active" data-cole="43">C43</button>
+      </div>
+    </div>
 
-  <!-- Por modelo -->
-  <h3 class="sub-title" style="margin-top:2rem">Por Modelo (Artículo)</h3>
-  <div class="table-tools">
-    <input type="text" id="searchModelo" placeholder="Buscar artículo o descripción..." autocomplete="off">
-  </div>
-  <div class="table-wrap">
-  <table id="tablaModelo" class="bi-table">
-    <thead>
-      <tr>
-        <th>Artículo</th>
-        <th>Descripción</th>
-        <th>Bota</th>
-        <th class="num">Solicitado</th>
-        <th class="num">Despachado</th>
-        <th class="num">Saldo</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for m in modelo_bota.modelos %}
-    <tr data-search="{{ m.articulo }} {{ m.descripcion | lower }} {{ m.bota | lower }}">
-      <td><strong>{{ m.articulo }}</strong></td>
-      <td>{{ m.descripcion }}</td>
-      <td class="bota-tag">{{ m.bota }}</td>
-      <td class="num">{{ "{:,.0f}".format(m.solicitado).replace(",",".") }}</td>
-      <td class="num">{{ "{:,.0f}".format(m.despachado).replace(",",".") }}</td>
-      <td class="num {% if m.saldo > 0 %}saldo-pendiente{% endif %}">{{ "{:,.0f}".format(m.saldo).replace(",",".") }}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  </div>
-  {% else %}
-  <p class="empty-msg">Carga PEDIDOS.Txt en la carpeta seed/ para ver este reporte.</p>
-  {% endif %}
-</section>
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Solicitado</div>
+        <div class="kpi-value" id="mb-solicitado">—</div>
+      </div>
+      <div class="kpi-card kpi-card--accent">
+        <div class="kpi-label">Despachado</div>
+        <div class="kpi-value" id="mb-despachado">—</div>
+      </div>
+      <div class="kpi-card kpi-card--danger">
+        <div class="kpi-label">Saldo Pendiente</div>
+        <div class="kpi-value" id="mb-saldo">—</div>
+      </div>
+      <div class="kpi-card kpi-card--accent">
+        <div class="kpi-label">% Despachado</div>
+        <div class="kpi-value" id="mb-pct">—</div>
+      </div>
+    </div>
 
+    <h3 class="sub-title">Por Tipo de Bota</h3>
+    <div class="table-wrap" style="margin-bottom:2rem">
+      <table id="tablaBotas" class="bi-table">
+        <thead>
+          <tr>
+            <th>Bota</th>
+            <th class="num">Clientes</th>
+            <th class="num">Solicitado</th>
+            <th class="num">Despachado</th>
+            <th class="num">Saldo</th>
+            <th class="num">% Despacho</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h3 class="sub-title">Por Modelo (Artículo)</h3>
+    <div class="table-tools">
+      <input type="text" id="searchModelo" placeholder="Buscar artículo o descripción..." autocomplete="off">
+    </div>
+    <div class="table-wrap">
+      <table id="tablaModelo" class="bi-table">
+        <thead>
+          <tr>
+            <th>Artículo</th>
+            <th>Descripción</th>
+            <th>Bota</th>
+            <th class="num">Solicitado</th>
+            <th class="num">Despachado</th>
+            <th class="num">Saldo</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-// Navegación entre secciones
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('is-active'));
-    document.querySelectorAll('.report-section').forEach(s => s.hidden = true);
-    btn.classList.add('is-active');
-    document.getElementById(btn.dataset.target).hidden = false;
-  });
-});
+const MEJORES_DATA = {{ mejores_clientes | tojson }};
+const MODELO_DATA  = {{ modelo_bota | tojson }};
 
-// Búsqueda en tablas
+// ── Helpers ──
+function fmtNum(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function fmtPesos(n) { return '$' + fmtNum(n); }
+
+// ── MEJORES CLIENTES ──
+let mejoresChart = null;
+
+function renderMejores(cole) {
+  const d = MEJORES_DATA[cole];
+
+  document.getElementById('mc-clientes').textContent = fmtNum(d.rows.length);
+  document.getElementById('mc-ventas').textContent   = fmtPesos(d.total_ventas);
+  document.getElementById('mc-prendas').textContent  = fmtNum(d.total_prendas);
+  document.getElementById('mc-top').textContent      = d.rows[0] ? d.rows[0].cliente.slice(0, 24) : '—';
+
+  const top10  = d.rows.slice(0, 10);
+  const labels = top10.map(r => r.cliente.length > 22 ? r.cliente.slice(0, 22) + '…' : r.cliente);
+  const values = top10.map(r => r.total);
+  const colors = top10.map((_, i) => i === 0 ? '#c8a84b' : 'rgba(200,168,75,0.4)');
+
+  if (mejoresChart) {
+    mejoresChart.data.labels                          = labels;
+    mejoresChart.data.datasets[0].data               = values;
+    mejoresChart.data.datasets[0].backgroundColor    = colors;
+    mejoresChart.update('none');
+  }
+
+  const tbody = document.querySelector('#tablaMejores tbody');
+  tbody.innerHTML = '';
+  d.rows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.dataset.search = row.cliente.toLowerCase() + ' ' + row.rut;
+    tr.innerHTML =
+      `<td class="rank">${i + 1}</td>` +
+      `<td class="cliente-name">${row.cliente}</td>` +
+      `<td class="rut">${row.rut}</td>` +
+      `<td class="num">${row.documentos}</td>` +
+      `<td class="num">${fmtNum(row.prendas)}</td>` +
+      `<td class="num total-cell">${fmtPesos(row.total)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  applySearch('searchMejores', 'tablaMejores');
+}
+
+// ── MODELO / BOTA ──
+function renderModelo(cole) {
+  const d = MODELO_DATA[cole];
+  const pct = d.total_solicitado ? Math.round(d.total_despachado / d.total_solicitado * 100) : 0;
+
+  document.getElementById('mb-solicitado').textContent = fmtNum(d.total_solicitado);
+  document.getElementById('mb-despachado').textContent = fmtNum(d.total_despachado);
+  document.getElementById('mb-saldo').textContent      = fmtNum(d.total_saldo);
+  document.getElementById('mb-pct').textContent        = pct + '%';
+
+  const botasTbody = document.querySelector('#tablaBotas tbody');
+  botasTbody.innerHTML = '';
+  d.botas.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="cliente-name">${b.bota}</td>` +
+      `<td class="num">${b.clientes}</td>` +
+      `<td class="num">${fmtNum(b.solicitado)}</td>` +
+      `<td class="num">${fmtNum(b.despachado)}</td>` +
+      `<td class="num ${b.saldo > 0 ? 'saldo-pendiente' : ''}">${fmtNum(b.saldo)}</td>` +
+      `<td class="num"><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar" style="width:${Math.min(b.pct_despachado,100)}%"></div></div><span>${b.pct_despachado}%</span></div></td>`;
+    botasTbody.appendChild(tr);
+  });
+
+  const modelosTbody = document.querySelector('#tablaModelo tbody');
+  modelosTbody.innerHTML = '';
+  d.modelos.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.dataset.search = (m.articulo + ' ' + m.descripcion + ' ' + m.bota).toLowerCase();
+    tr.innerHTML =
+      `<td><strong>${m.articulo}</strong></td>` +
+      `<td>${m.descripcion}</td>` +
+      `<td><span class="bota-tag">${m.bota}</span></td>` +
+      `<td class="num">${fmtNum(m.solicitado)}</td>` +
+      `<td class="num">${fmtNum(m.despachado)}</td>` +
+      `<td class="num ${m.saldo > 0 ? 'saldo-pendiente' : ''}">${fmtNum(m.saldo)}</td>`;
+    modelosTbody.appendChild(tr);
+  });
+
+  applySearch('searchModelo', 'tablaModelo');
+}
+
+// ── Búsqueda ──
+function applySearch(inputId, tableId) {
+  const q = (document.getElementById(inputId)?.value || '').toLowerCase();
+  document.querySelectorAll('#' + tableId + ' tbody tr').forEach(tr => {
+    tr.hidden = !!q && !(tr.dataset.search || '').includes(q);
+  });
+}
 function setupSearch(inputId, tableId) {
-  const input = document.getElementById(inputId);
-  const table = document.getElementById(tableId);
-  if (!input || !table) return;
-  input.addEventListener('input', () => {
-    const q = input.value.toLowerCase();
-    table.querySelectorAll('tbody tr').forEach(tr => {
-      tr.hidden = q && !tr.dataset.search.includes(q);
+  const el = document.getElementById(inputId);
+  if (el) el.addEventListener('input', () => applySearch(inputId, tableId));
+}
+
+// ── Filtro de colección ──
+function setupFilter(filterId, renderFn) {
+  const container = document.getElementById(filterId);
+  if (!container) return;
+  container.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      renderFn(btn.dataset.cole);
     });
   });
 }
-setupSearch('searchMejores', 'tablaMejores');
-setupSearch('searchNoCompraron', 'tablaNoCompraron');
-setupSearch('searchModelo', 'tablaModelo');
+
+// ── Navegación sidebar ──
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('is-active'));
+    document.querySelectorAll('.report-section').forEach(s => s.hidden = true);
+    btn.classList.add('is-active');
+    document.getElementById(btn.dataset.target).hidden = false;
+    document.getElementById('sidebar').classList.remove('is-open');
+    document.getElementById('sidebarOverlay').classList.remove('is-visible');
+  });
+});
+
+// ── Sidebar móvil ──
+document.getElementById('hamburger')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('is-open');
+  document.getElementById('sidebarOverlay').classList.toggle('is-visible');
+});
+document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('is-open');
+  document.getElementById('sidebarOverlay').classList.remove('is-visible');
+});
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  Chart.defaults.color       = '#a19f9d';
+  Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+  mejoresChart = new Chart(document.getElementById('chartMejores'), {
+    type: 'bar',
+    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4, borderSkipped: false }] },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ' ' + fmtPesos(c.raw) } }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#797775', callback: v => '$' + fmtNum(Math.round(v / 1000)) + 'K' },
+          grid:  { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: { ticks: { color: '#f3f2f1', font: { size: 12 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  setupFilter('filterMejores', renderMejores);
+  setupFilter('filterModelo',  renderModelo);
+  setupSearch('searchMejores',    'tablaMejores');
+  setupSearch('searchNoCompraron','tablaNoCompraron');
+  setupSearch('searchModelo',     'tablaModelo');
+
+  renderMejores('43');
+  renderModelo('43');
+});
 </script>
 </body>
 </html>
