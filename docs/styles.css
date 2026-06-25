@@ -367,14 +367,20 @@ body {
 
 /* ═══════════════════ RESPONSIVO ═══════════════════ */
 
-/* Tablet / pantalla chica */
+/* Tablet */
 @media (max-width: 1024px) {
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* Móvil — sidebar como overlay */
 @media (max-width: 900px) {
-  body { overflow: auto; }
+  /* Cambiar a block para que el main ocupe todo el ancho correctamente */
+  body {
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+  }
 
   .mobile-header { display: flex; }
 
@@ -387,25 +393,36 @@ body {
 
   .main-content {
     margin-left: 0;
+    width: 100%;
     height: auto;
-    min-height: 100vh;
     overflow: visible;
     padding-top: 52px;
   }
 
-  .report-section { padding: 1.25rem 1rem 2.5rem; }
+  .report-section { padding: 1.25rem .875rem 2.5rem; }
 
   .page-header { flex-direction: column; align-items: flex-start; }
 
-  .cole-filter { margin-top: .25rem; }
+  .cole-filter { margin-top: .35rem; }
 
-  .chart-wrap { height: 200px; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); gap: .5rem; }
+
+  /* Evitar que el texto desborde la card */
+  .kpi-card { padding: .9rem 1rem; overflow: hidden; min-width: 0; }
+  .kpi-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi-value { font-size: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi-value--sm { font-size: .9rem; }
+
+  .chart-wrap { height: 210px; }
 }
 
-/* Móvil pequeño */
-@media (max-width: 560px) {
-  .kpi-row { grid-template-columns: 1fr 1fr; gap: .5rem; }
-  .kpi-value { font-size: 1.3rem; }
+/* Móvil pequeño (≤480px) */
+@media (max-width: 480px) {
+  .report-section { padding: 1rem .75rem 2rem; }
+  .kpi-card { padding: .75rem .85rem; }
+  .kpi-value { font-size: 1.05rem; }
+  .kpi-value--sm { font-size: .85rem; }
   .table-tools input { width: 100%; }
   .chart-wrap { height: 180px; }
+  .filter-btn { padding: .3rem .7rem; font-size: .72rem; }
 }
