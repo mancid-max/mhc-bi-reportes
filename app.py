@@ -82,7 +82,7 @@ def report_mejores_clientes() -> dict:
                     "prendas":   v["prendas"],
                     "documentos": len(v["documentos"]),
                 }
-                for v in data[cole].values() if v["total"] > 0 and v["prendas"] > 10
+                for v in data[cole].values() if v["total"] > 0 and v["prendas"] > 5
             ],
             key=lambda x: -x["total"],
         )
@@ -133,7 +133,7 @@ def report_no_compraron() -> dict:
                 "prendas_c42":     v["prendas"],
             }
             for key, v in en_c42.items()
-            if key not in en_c43 and v["prendas"] > 10
+            if key not in en_c43 and v["prendas"] > 5
         ],
         key=lambda x: -x["total_historico"],
     )
