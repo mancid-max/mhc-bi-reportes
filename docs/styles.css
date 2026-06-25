@@ -426,23 +426,56 @@ body {
   .chart-wrap { height: 180px; }
   .filter-btn { padding: .3rem .7rem; font-size: .72rem; }
 
-  /* Tabla compacta — una línea por fila, scroll horizontal */
-  .bi-table { min-width: unset; width: 100%; font-size: .72rem; }
+  /* Tabla sin scroll horizontal — todo en pantalla */
+  .bi-table {
+    min-width: unset;
+    width: 100%;
+    table-layout: fixed;
+    font-size: .65rem;
+  }
   .bi-table thead th {
-    padding: .5rem .55rem;
-    font-size: .62rem;
+    padding: .45rem .3rem;
+    font-size: .58rem;
     white-space: nowrap;
+    overflow: hidden;
   }
   .bi-table tbody td {
-    padding: .45rem .55rem;
+    padding: .42rem .3rem;
     white-space: nowrap;
-  }
-  .bi-table tbody td.cliente-name {
-    max-width: 130px;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .bi-table tbody td.rut  { font-size: .68rem; }
-  .bi-table tbody td.rank { width: 1.8rem; }
-  .bi-table tbody td.num  { font-size: .72rem; }
+
+  /* Mejores Clientes: #(5%) Cliente(30%) RUT(22%) Docs(9%) Prendas(13%) Total(21%) */
+  #tablaMejores th:nth-child(1), #tablaMejores td:nth-child(1) { width: 5%; text-align: center; }
+  #tablaMejores th:nth-child(2), #tablaMejores td:nth-child(2) { width: 30%; }
+  #tablaMejores th:nth-child(3), #tablaMejores td:nth-child(3) { width: 22%; }
+  #tablaMejores th:nth-child(4), #tablaMejores td:nth-child(4) { width: 9%; }
+  #tablaMejores th:nth-child(5), #tablaMejores td:nth-child(5) { width: 13%; }
+  #tablaMejores th:nth-child(6), #tablaMejores td:nth-child(6) { width: 21%; }
+
+  /* No Compraron: #(5%) Cliente(32%) RUT(22%) Prendas(16%) Total(25%) */
+  #tablaNoCompraron th:nth-child(1), #tablaNoCompraron td:nth-child(1) { width: 5%; text-align: center; }
+  #tablaNoCompraron th:nth-child(2), #tablaNoCompraron td:nth-child(2) { width: 32%; }
+  #tablaNoCompraron th:nth-child(3), #tablaNoCompraron td:nth-child(3) { width: 22%; }
+  #tablaNoCompraron th:nth-child(4), #tablaNoCompraron td:nth-child(4) { width: 16%; }
+  #tablaNoCompraron th:nth-child(5), #tablaNoCompraron td:nth-child(5) { width: 25%; }
+
+  /* Botas: Bota(30%) Cli(10%) Sol(15%) Des(15%) Saldo(15%) %(15%) */
+  #tablaBotas th:nth-child(1), #tablaBotas td:nth-child(1) { width: 30%; }
+  #tablaBotas th:nth-child(2), #tablaBotas td:nth-child(2) { width: 10%; }
+  #tablaBotas th:nth-child(3), #tablaBotas td:nth-child(3) { width: 15%; }
+  #tablaBotas th:nth-child(4), #tablaBotas td:nth-child(4) { width: 15%; }
+  #tablaBotas th:nth-child(5), #tablaBotas td:nth-child(5) { width: 15%; }
+  #tablaBotas th:nth-child(6), #tablaBotas td:nth-child(6) { width: 15%; }
+  #tablaBotas .pct-bar-track { display: none; }
+  #tablaBotas .pct-bar-wrap span { min-width: unset; }
+
+  /* Modelos: Art(18%) Desc(28%) Bota(18%) Sol(12%) Des(12%) Saldo(12%) */
+  #tablaModelo th:nth-child(1), #tablaModelo td:nth-child(1) { width: 18%; }
+  #tablaModelo th:nth-child(2), #tablaModelo td:nth-child(2) { width: 28%; }
+  #tablaModelo th:nth-child(3), #tablaModelo td:nth-child(3) { width: 18%; }
+  #tablaModelo th:nth-child(4), #tablaModelo td:nth-child(4) { width: 12%; }
+  #tablaModelo th:nth-child(5), #tablaModelo td:nth-child(5) { width: 12%; }
+  #tablaModelo th:nth-child(6), #tablaModelo td:nth-child(6) { width: 12%; }
 }
