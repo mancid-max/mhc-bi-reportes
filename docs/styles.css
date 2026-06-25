@@ -425,4 +425,30 @@ body {
   .table-tools input { width: 100%; }
   .chart-wrap { height: 180px; }
   .filter-btn { padding: .3rem .7rem; font-size: .72rem; }
+
+  /* Tablas: quitar min-width y adaptar columnas */
+  .bi-table { min-width: unset; width: 100%; }
+
+  /* Truncar nombres largos */
+  .bi-table td.cliente-name {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Ocultar columnas menos críticas en Mejores Clientes */
+  #tablaMejores th:nth-child(4),
+  #tablaMejores td:nth-child(4) { display: none; }
+
+  /* Ocultar columnas en Modelo/Bota */
+  #tablaBotas th:nth-child(2),
+  #tablaBotas td:nth-child(2) { display: none; }
+  #tablaModelo th:nth-child(2),
+  #tablaModelo td:nth-child(2),
+  #tablaModelo th:nth-child(3),
+  #tablaModelo td:nth-child(3) { display: none; }
+
+  /* RUT más compacto */
+  .bi-table td.rut { font-size: .72rem; letter-spacing: -.01em; }
 }
