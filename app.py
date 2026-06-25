@@ -38,7 +38,7 @@ def _ventas_path() -> Path:
 
 
 def _pedidos_path() -> Path:
-    p = SEED_DIR / "PEDIDOS.Txt"
+    p = SEED_DIR / "PEDIDOS FOR BI.Txt"
     return p if p.exists() and p.stat().st_size > 0 else Path()
 
 
