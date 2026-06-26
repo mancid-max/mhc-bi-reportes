@@ -1114,6 +1114,9 @@ function getClientQuotes(c) {
 
 function showLoginOverlay() {
   document.getElementById('biLoginOverlay').hidden = false;
+  document.getElementById('biLoginEmail').value = '';
+  document.getElementById('biLoginPassword').value = '';
+  document.getElementById('biLoginError').hidden = true;
 }
 
 function hideLoginOverlay() {
