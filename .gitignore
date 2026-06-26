@@ -6,3 +6,4 @@ logs/auto_build.log
 seed/PEDIDOS.Txt
 seed/VENTAS-TOD-2026.CSV
 *.db
+.env

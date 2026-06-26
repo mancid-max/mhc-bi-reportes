@@ -6,15 +6,30 @@ from pathlib import Path
 from flask import Flask, render_template
 
 try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+try:
     import openpyxl as _openpyxl
     _OPENPYXL = True
 except ImportError:
     _OPENPYXL = False
 
+try:
+    import requests as _requests
+    _REQUESTS = True
+except ImportError:
+    _REQUESTS = False
+
 app = Flask(__name__)
 
 BI_DIR   = Path(os.environ.get("BI_REPORTES_BI_DIR", r"Z:\BI"))
 SEED_DIR = Path(__file__).parent / "seed"
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
 COLECCIONES           = ["40", "41", "42", "43"]
 TEMPORADAS_HISTORICAS = {"40", "41", "42"}
@@ -22,13 +37,18 @@ TEMPORADAS_ACTUALES   = {"43", "44"}
 
 
 def _read_csv(path: Path) -> list[dict]:
-    for enc in ("utf-8-sig", "latin-1", "cp1252"):
+    for enc in ("utf-8-sig", "cp1252", "latin-1", "cp1250"):
         try:
-            with open(path, encoding=enc, errors="replace", newline="") as f:
+            with open(path, encoding=enc, errors="strict", newline="") as f:
                 return list(csv.DictReader(f, delimiter=";"))
-        except Exception:
+        except (UnicodeDecodeError, Exception):
             continue
-    return []
+    # fallback con reemplazo
+    try:
+        with open(path, encoding="cp1252", errors="replace", newline="") as f:
+            return list(csv.DictReader(f, delimiter=";"))
+    except Exception:
+        return []
 
 
 def _to_int(v) -> int:
@@ -41,6 +61,46 @@ def _to_int(v) -> int:
 def _ventas_path() -> Path:
     p = BI_DIR / "VENTAS-TOD-2026.CSV"
     return p if p.exists() and p.stat().st_size > 0 else SEED_DIR / "VENTAS-TOD-2026.CSV"
+
+
+def _fetch_quotes() -> list[dict]:
+    if not _REQUESTS:
+        return []
+    try:
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+        }
+        # Traer todos los quotes
+        r = _requests.get(
+            f"{SUPABASE_URL}/rest/v1/quotes",
+            headers=headers,
+            params={"select": "id,store_name,client_rut_normalized,total_items,created_at,is_ready,source"},
+            timeout=8,
+        )
+        quotes = r.json() if r.ok else []
+
+        # Traer todos los quote_items
+        r2 = _requests.get(
+            f"{SUPABASE_URL}/rest/v1/quote_items",
+            headers=headers,
+            params={"select": "quote_id,sku,size,quantity"},
+            timeout=8,
+        )
+        items = r2.json() if r2.ok else []
+
+        # Agrupar items por quote_id
+        items_by_quote: dict[str, list] = {}
+        for item in items:
+            qid = item["quote_id"]
+            items_by_quote.setdefault(qid, []).append(item)
+
+        for q in quotes:
+            q["items"] = items_by_quote.get(q["id"], [])
+
+        return quotes
+    except Exception:
+        return []
 
 
 def _numeros_path() -> Path:
@@ -327,15 +387,15 @@ def report_ficha_clientes() -> list:
 
         rut_norm = _norm_rut(c["rut"])
         result.append({
-            "key":     key,
-            "rut":     c["rut"],
-            "nombre":  c["nombre"],
-            "ciudad":  c["ciudad"].strip(),
-            "mail":    personal_mail.get(rut_norm, ""),
-            "celular": personal_cel.get(rut_norm, ""),
-            "coles":   coles_serial,
-            "total":   c["total"],
-            "prendas": c["prendas"],
+            "key":            key,
+            "rut":            c["rut"],
+            "nombre":         c["nombre"],
+            "ciudad":         c["ciudad"].strip(),
+            "mail":           personal_mail.get(rut_norm, ""),
+            "celular":        personal_cel.get(rut_norm, ""),
+            "coles":          coles_serial,
+            "total":          c["total"],
+            "prendas":        c["prendas"],
             "top_sub": top_subs[0][0] if top_subs else "—",
             "top_subs": [{"nombre": s, "cant": p} for s, p in top_subs],
         })

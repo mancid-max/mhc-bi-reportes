@@ -243,6 +243,18 @@
       <div><h1 class="page-title">Clientes</h1></div>
     </div>
 
+    <!-- Login overlay -->
+    <div id="biLoginOverlay" class="bi-login-overlay" hidden>
+      <div class="bi-login-card">
+        <div class="bi-login-logo">MJ</div>
+        <h3 class="bi-login-title">Acceso Clientes</h3>
+        <input type="email" id="biLoginEmail" class="bi-login-input" placeholder="Email" autocomplete="email">
+        <input type="password" id="biLoginPassword" class="bi-login-input" placeholder="Contraseña" autocomplete="current-password">
+        <button id="biLoginBtn" class="bi-login-btn">Ingresar</button>
+        <p id="biLoginError" class="bi-login-error" hidden></p>
+      </div>
+    </div>
+
     <!-- Vista lista -->
     <div id="clientes-lista">
       <div class="table-tools">
@@ -251,6 +263,11 @@
           <button class="filter-btn active" data-cel="todos">Todos</button>
           <button class="filter-btn" data-cel="con">Con teléfono</button>
           <button class="filter-btn" data-cel="sin">Sin teléfono</button>
+          <button class="filter-btn" data-cel="landing">Pedidos landing</button>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:.5rem">
+          <span id="biUserLabel" class="bi-user-label" hidden></span>
+          <button id="biLogoutBtn" class="btn-back" style="margin:0" hidden>Cerrar sesión</button>
         </div>
       </div>
       <p class="lista-hint" id="listaHint">Mostrando top 50 · Busca para filtrar</p>
@@ -321,6 +338,23 @@
 
       <h3 class="sub-title">Top Productos por Prendas</h3>
       <div id="fichaTopSubs" class="top-subs-grid"></div>
+
+      <div id="fichaLanding" hidden>
+        <h3 class="sub-title">Pedidos por Landing</h3>
+        <div class="table-wrap">
+          <table class="bi-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Fuente</th>
+                <th class="num">Prendas</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="fichaLandingBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -475,8 +509,9 @@ let _celFiltro = 'todos';
 function renderClientesList(query) {
   const q = query.trim().toLowerCase();
   let pool = CLIENTES_DATA;
-  if (_celFiltro === 'con') pool = pool.filter(c => c.celular);
-  if (_celFiltro === 'sin') pool = pool.filter(c => !c.celular);
+  if (_celFiltro === 'con')     pool = pool.filter(c => c.celular);
+  if (_celFiltro === 'sin')     pool = pool.filter(c => !c.celular);
+  if (_celFiltro === 'landing') pool = pool.filter(c => getClientQuotes(c).length > 0);
   const filtered = q
     ? pool.filter(c => c.nombre.toLowerCase().includes(q) || c.rut.includes(q))
     : pool;
@@ -492,7 +527,7 @@ function renderClientesList(query) {
     tr.addEventListener('click', () => showFicha(c.key));
     tr.innerHTML =
       `<td class="rank">${i + 1}</td>` +
-      `<td class="cliente-name">${c.nombre}</td>` +
+      `<td class="cliente-name">${c.nombre}${getClientQuotes(c).length ? ' <span class="badge-landing" title="Pidió por la landing">🛒</span>' : ''}</td>` +
       `<td class="rut">${c.rut}</td>`;
     tbody.appendChild(tr);
   });
@@ -553,6 +588,26 @@ function showFicha(key) {
       `<div class="top-sub-cant">${fmtNum(s.cant)} prendas</div>`;
     grid.appendChild(div);
   });
+
+  // Landing pedidos (datos en vivo de Supabase)
+  const landingEl   = document.getElementById('fichaLanding');
+  const landingBody = document.getElementById('fichaLandingBody');
+  const liveQuotes  = getClientQuotes(c);
+  if (liveQuotes.length) {
+    landingEl.hidden = false;
+    landingBody.innerHTML = '';
+    liveQuotes.forEach(q => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        `<td>${q.fecha}</td>` +
+        `<td>${q.source}</td>` +
+        `<td class="num">${fmtNum(q.total_items)}</td>` +
+        `<td><span class="tag-estado ${q.is_ready ? 'tag-ok' : 'tag-pend'}">${q.is_ready ? 'Procesado' : 'Pendiente'}</span></td>`;
+      landingBody.appendChild(tr);
+    });
+  } else {
+    landingEl.hidden = true;
+  }
 }
 
 document.getElementById('btnBack')?.addEventListener('click', () => {
@@ -573,8 +628,132 @@ document.querySelectorAll('[data-cel]').forEach(btn => {
   });
 });
 
+// ── Supabase auth (mismo patrón que la landing) ──
+const SB_URL  = "https://kdtydxihrflhziclgiof.supabase.co";
+const SB_KEY  = "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy";
+let biToken   = sessionStorage.getItem('bi_access_token') || '';
+let biEmail   = sessionStorage.getItem('bi_user_email')   || '';
+let liveQuotesByRut = {};
+
+function normRut(s) { return (s || '').replace(/[.,\-]/g, ''); }
+
+async function loginBI(email, password) {
+  const res = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.access_token) throw new Error('Credenciales incorrectas');
+  biToken = data.access_token;
+  biEmail = data?.user?.email || email;
+  sessionStorage.setItem('bi_access_token', biToken);
+  sessionStorage.setItem('bi_user_email', biEmail);
+}
+
+function logoutBI() {
+  biToken = ''; biEmail = '';
+  sessionStorage.removeItem('bi_access_token');
+  sessionStorage.removeItem('bi_user_email');
+  liveQuotesByRut = {};
+  actualizarUIAuth();
+  renderClientesList(document.getElementById('searchClientes').value);
+}
+
+async function fetchQuotesLive() {
+  if (!biToken) return;
+  const h = { apikey: SB_KEY, Authorization: `Bearer ${biToken}` };
+  const [rQ, rI] = await Promise.all([
+    fetch(`${SB_URL}/rest/v1/quotes?select=id,store_name,client_rut_normalized,total_items,created_at,is_ready,source`, { headers: h }),
+    fetch(`${SB_URL}/rest/v1/quote_items?select=quote_id,sku,size,quantity`, { headers: h }),
+  ]);
+  if (!rQ.ok) {
+    if (rQ.status === 401) { logoutBI(); showLoginOverlay(); }
+    return;
+  }
+  const quotes = await rQ.json();
+  const items  = rI.ok ? await rI.json() : [];
+  const itemsByQuote = {};
+  items.forEach(it => { (itemsByQuote[it.quote_id] = itemsByQuote[it.quote_id] || []).push(it); });
+  liveQuotesByRut = {};
+  quotes.forEach(q => {
+    const rut = normRut(q.client_rut_normalized);
+    if (!rut) return;
+    (liveQuotesByRut[rut] = liveQuotesByRut[rut] || []).push({
+      fecha: (q.created_at || '').slice(0, 10),
+      tienda: q.store_name || '',
+      total_items: q.total_items || 0,
+      is_ready: q.is_ready || false,
+      source: q.source || '',
+      items: itemsByQuote[q.id] || [],
+    });
+  });
+}
+
+function getClientQuotes(c) {
+  return liveQuotesByRut[normRut(c.rut)] || [];
+}
+
+function showLoginOverlay() {
+  document.getElementById('biLoginOverlay').hidden = false;
+}
+
+function hideLoginOverlay() {
+  document.getElementById('biLoginOverlay').hidden = true;
+}
+
+function actualizarUIAuth() {
+  const label    = document.getElementById('biUserLabel');
+  const btnOut   = document.getElementById('biLogoutBtn');
+  const overlay  = document.getElementById('biLoginOverlay');
+  const lista    = document.getElementById('clientes-lista');
+  const ficha    = document.getElementById('clientes-ficha');
+  if (biToken) {
+    label.textContent = biEmail;
+    label.hidden   = false;
+    btnOut.hidden  = false;
+    overlay.hidden = true;
+    lista.hidden   = false;
+  } else {
+    label.hidden   = true;
+    btnOut.hidden  = true;
+    overlay.hidden = false;
+    lista.hidden   = true;
+    if (ficha) ficha.hidden = true;
+  }
+}
+
+// Login form handlers
+document.getElementById('biLoginBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('biLoginBtn');
+  const err = document.getElementById('biLoginError');
+  const email = document.getElementById('biLoginEmail').value.trim();
+  const pass  = document.getElementById('biLoginPassword').value;
+  err.hidden = true;
+  btn.disabled = true; btn.textContent = 'Ingresando...';
+  try {
+    await loginBI(email, pass);
+    actualizarUIAuth();
+    await fetchQuotesLive();
+    renderClientesList(document.getElementById('searchClientes').value);
+  } catch(e) {
+    err.textContent = e.message;
+    err.hidden = false;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Ingresar';
+  }
+});
+
+document.getElementById('biLoginPassword')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('biLoginBtn')?.click();
+});
+
+document.getElementById('biLogoutBtn')?.addEventListener('click', logoutBI);
+
 function initClientes() {
-  renderClientesList('');
+  actualizarUIAuth();
+  if (biToken) fetchQuotesLive().then(() => renderClientesList(''));
+  else renderClientesList('');
 }
 
 // ── Init ──
