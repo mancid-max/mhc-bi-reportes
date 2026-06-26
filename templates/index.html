@@ -39,6 +39,10 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2zm9 0H6v5h4V2zm0 6H6v5h4V8zM5 2H2v5h3V2zm0 6H2v5h3V8zm6 0v5h3V8h-3zm0-6v5h3V2h-3z"/></svg>
       Modelo / Bota
     </button>
+    <button class="nav-item" data-target="sec-clientes">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.029 10 8 10c-2.03 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+      Clientes
+    </button>
   </nav>
   <div class="sidebar-footer">
     <div class="season-label">Colecciones</div>
@@ -233,6 +237,93 @@
     </div>
   </section>
 
+  <!-- ── FICHA DE CLIENTES ── -->
+  <section id="sec-clientes" class="report-section" hidden>
+    <div class="page-header">
+      <div><h1 class="page-title">Clientes</h1></div>
+    </div>
+
+    <!-- Vista lista -->
+    <div id="clientes-lista">
+      <div class="table-tools">
+        <input type="text" id="searchClientes" placeholder="Buscar cliente o RUT..." autocomplete="off">
+        <div class="filter-btns" style="margin-top:.6rem">
+          <button class="filter-btn active" data-cel="todos">Todos</button>
+          <button class="filter-btn" data-cel="con">Con teléfono</button>
+          <button class="filter-btn" data-cel="sin">Sin teléfono</button>
+        </div>
+      </div>
+      <p class="lista-hint" id="listaHint">Mostrando top 50 · Busca para filtrar</p>
+      <div class="table-wrap">
+        <table class="bi-table" id="tablaClientes">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>RUT</th>
+            </tr>
+          </thead>
+          <tbody id="clientesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Vista ficha -->
+    <div id="clientes-ficha" hidden>
+      <button class="btn-back" id="btnBack">&#8592; Volver</button>
+
+      <div class="ficha-header">
+        <div class="ficha-avatar" id="fichaAvatar">--</div>
+        <div class="ficha-info">
+          <div class="ficha-nombre" id="fichaNombre">—</div>
+          <div class="ficha-meta">
+            <span id="fichaRut" class="ficha-rut"></span>
+            <span id="fichaCiudad" class="ficha-ciudad"></span>
+            <span id="fichaMail" class="ficha-mail"></span>
+            <span id="fichaCelular" class="ficha-celular"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-card kpi-card--accent">
+          <div class="kpi-label">Total Histórico</div>
+          <div class="kpi-value" id="fichaTotal">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Prendas</div>
+          <div class="kpi-value" id="fichaPrendas">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Colecciones Activas</div>
+          <div class="kpi-value" id="fichaColes">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Top Producto</div>
+          <div class="kpi-value kpi-value--sm" id="fichaTopSub">—</div>
+        </div>
+      </div>
+
+      <h3 class="sub-title">Por Colección (C40 en adelante)</h3>
+      <div class="table-wrap" style="margin-bottom:1.75rem">
+        <table class="bi-table" id="fichaTablaColес">
+          <thead>
+            <tr>
+              <th>Colección</th>
+              <th class="num">Total ($)</th>
+              <th class="num">Prendas</th>
+              <th class="num">Documentos</th>
+            </tr>
+          </thead>
+          <tbody id="fichaColesBody"></tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-title">Top Productos por Prendas</h3>
+      <div id="fichaTopSubs" class="top-subs-grid"></div>
+    </div>
+  </section>
+
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -376,6 +467,116 @@ document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
   document.getElementById('sidebarOverlay').classList.remove('is-visible');
 });
 
+// ── CLIENTES ──
+const CLIENTES_DATA = {{ ficha_clientes | tojson }};
+
+let _celFiltro = 'todos';
+
+function renderClientesList(query) {
+  const q = query.trim().toLowerCase();
+  let pool = CLIENTES_DATA;
+  if (_celFiltro === 'con') pool = pool.filter(c => c.celular);
+  if (_celFiltro === 'sin') pool = pool.filter(c => !c.celular);
+  const filtered = q
+    ? pool.filter(c => c.nombre.toLowerCase().includes(q) || c.rut.includes(q))
+    : pool;
+
+  document.getElementById('listaHint').textContent =
+    `${filtered.length} cliente${filtered.length !== 1 ? 's' : ''}`;
+
+  const tbody = document.getElementById('clientesBody');
+  tbody.innerHTML = '';
+  filtered.forEach((c, i) => {
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', () => showFicha(c.key));
+    tr.innerHTML =
+      `<td class="rank">${i + 1}</td>` +
+      `<td class="cliente-name">${c.nombre}</td>` +
+      `<td class="rut">${c.rut}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function showFicha(key) {
+  const c = CLIENTES_DATA.find(x => x.key === key);
+  if (!c) return;
+
+  document.getElementById('clientes-lista').hidden = true;
+  document.getElementById('clientes-ficha').hidden = false;
+
+  // Avatar
+  const words = c.nombre.trim().split(/\s+/);
+  const initials = words.length >= 2 ? words[0][0] + words[1][0] : c.nombre.slice(0, 2);
+  document.getElementById('fichaAvatar').textContent = initials.toUpperCase();
+
+  document.getElementById('fichaNombre').textContent  = c.nombre;
+  document.getElementById('fichaRut').textContent     = c.rut;
+  document.getElementById('fichaCiudad').textContent  = c.ciudad || '';
+  const mailEl = document.getElementById('fichaMail');
+  mailEl.textContent = c.mail || '';
+  mailEl.hidden = !c.mail;
+  const celEl = document.getElementById('fichaCelular');
+  celEl.textContent = c.celular || '';
+  celEl.hidden = !c.celular;
+  document.getElementById('fichaTotal').textContent   = fmtPesos(c.total);
+  document.getElementById('fichaPrendas').textContent = fmtNum(c.prendas);
+  document.getElementById('fichaTopSub').textContent  = c.top_sub;
+
+  const colesActivas = Object.values(c.coles).filter(d => d.total > 0).length;
+  document.getElementById('fichaColes').textContent = colesActivas;
+
+  // Tabla colecciones
+  const tbody = document.getElementById('fichaColesBody');
+  tbody.innerHTML = '';
+  ['40','41','42','43'].forEach(cole => {
+    const d = c.coles[cole];
+    if (!d || d.total === 0) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td><span class="tag-temp">C${cole}</span></td>` +
+      `<td class="num total-cell">${fmtPesos(d.total)}</td>` +
+      `<td class="num">${fmtNum(d.prendas)}</td>` +
+      `<td class="num">${d.docs}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Top subcategorías
+  const grid = document.getElementById('fichaTopSubs');
+  grid.innerHTML = '';
+  c.top_subs.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'top-sub-card';
+    div.innerHTML =
+      `<div class="top-sub-rank">${i + 1}</div>` +
+      `<div class="top-sub-nombre">${s.nombre}</div>` +
+      `<div class="top-sub-cant">${fmtNum(s.cant)} prendas</div>`;
+    grid.appendChild(div);
+  });
+}
+
+document.getElementById('btnBack')?.addEventListener('click', () => {
+  document.getElementById('clientes-ficha').hidden = true;
+  document.getElementById('clientes-lista').hidden = false;
+});
+
+document.getElementById('searchClientes')?.addEventListener('input', e => {
+  renderClientesList(e.target.value);
+});
+
+document.querySelectorAll('[data-cel]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-cel]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _celFiltro = btn.dataset.cel;
+    renderClientesList(document.getElementById('searchClientes').value);
+  });
+});
+
+function initClientes() {
+  renderClientesList('');
+}
+
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
   Chart.defaults.color       = '#a19f9d';
@@ -411,6 +612,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderMejores('43');
   renderModelo('43');
+
+  // ── CLIENTES ──
+  initClientes();
 });
 </script>
 </body>

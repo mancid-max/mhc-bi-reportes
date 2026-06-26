@@ -5,6 +5,12 @@ import os
 from pathlib import Path
 from flask import Flask, render_template
 
+try:
+    import openpyxl as _openpyxl
+    _OPENPYXL = True
+except ImportError:
+    _OPENPYXL = False
+
 app = Flask(__name__)
 
 BI_DIR   = Path(os.environ.get("BI_REPORTES_BI_DIR", r"Z:\BI"))
@@ -35,6 +41,16 @@ def _to_int(v) -> int:
 def _ventas_path() -> Path:
     p = BI_DIR / "VENTAS-TOD-2026.CSV"
     return p if p.exists() and p.stat().st_size > 0 else SEED_DIR / "VENTAS-TOD-2026.CSV"
+
+
+def _numeros_path() -> Path:
+    p = SEED_DIR / "Numeros.xlsx"
+    return p if p.exists() else Path()
+
+
+def _data_personal_path() -> Path:
+    p = SEED_DIR / "Data personal clientes.TXT"
+    return p if p.exists() else Path()
 
 
 def _pedidos_path() -> Path:
@@ -208,6 +224,126 @@ def report_modelo_bota() -> dict:
     return result
 
 
+# ── Reporte 4: Ficha de clientes (C40 en adelante) ───────────────────────────
+
+def report_ficha_clientes() -> list:
+    path = _ventas_path()
+    if not path.exists():
+        return []
+
+    def _norm_rut(s: str) -> str:
+        return str(s or "").strip().replace(".", "").replace(",", "").replace("-", "")
+
+    # Cargar mail desde Data personal clientes.TXT
+    personal_mail: dict[str, str] = {}
+    dp = _data_personal_path()
+    if dp.exists():
+        for r in _read_csv(dp):
+            rut_norm = _norm_rut(r.get("RUT") or "")
+            mail = str(r.get("Mail") or "").strip()
+            if rut_norm and mail:
+                personal_mail[rut_norm] = mail
+
+    # Cargar celular desde Numeros.xlsx → hoja "BASE DE DATOS OFICIAL"
+    personal_cel: dict[str, str] = {}
+    nx = _numeros_path()
+    if nx.exists() and _OPENPYXL:
+        wb = _openpyxl.load_workbook(nx, data_only=True, read_only=True)
+        if "BASE DE DATOS OFICIAL" in wb.sheetnames:
+            ws = wb["BASE DE DATOS OFICIAL"]
+            rows_xl = ws.iter_rows(min_row=3, values_only=True)
+            headers_xl = [str(c or "").strip() for c in next(rows_xl)]
+            try:
+                idx_rut = headers_xl.index("RUT")
+                idx_cel = headers_xl.index("CELULAR")
+            except ValueError:
+                idx_rut = idx_cel = -1
+            if idx_rut >= 0 and idx_cel >= 0:
+                for row in rows_xl:
+                    rut_norm = _norm_rut(row[idx_rut] if idx_rut < len(row) else "")
+                    cel = str(row[idx_cel] if idx_cel < len(row) else "").strip()
+                    if cel and cel not in ("None", "0"):
+                        personal_cel[rut_norm] = cel
+        wb.close()
+
+    rows     = _read_csv(path)
+    clientes: dict[str, dict] = {}
+
+    for r in rows:
+        temp = str(r.get("Temporada") or "").strip()
+        if not temp.isdigit() or int(temp) < 40:
+            continue
+
+        rut      = str(r.get("Rut")          or "").strip()
+        nombre   = str(r.get("cliente")       or "").strip() or rut
+        ciudad   = str(r.get("Ciudad")        or "").strip()
+        subcateg = str(r.get("SubCategoria")  or "").strip()
+        total    = _to_int(r.get("Total"))
+        cant     = _to_int(r.get("Cant"))
+        num      = str(r.get("Numero")        or "").strip()
+        key      = rut or nombre
+
+        if key not in clientes:
+            clientes[key] = {
+                "rut":     rut,
+                "nombre":  nombre,
+                "ciudad":  ciudad,
+                "coles":   {c: {"total": 0, "prendas": 0, "docs": set()} for c in COLECCIONES},
+                "subs":    {},
+                "total":   0,
+                "prendas": 0,
+            }
+
+        c = clientes[key]
+        if ciudad and not c["ciudad"]:
+            c["ciudad"] = ciudad
+
+        if temp in COLECCIONES:
+            c["coles"][temp]["total"]   += total
+            c["coles"][temp]["prendas"] += cant
+            c["coles"][temp]["docs"].add(num)
+
+        c["total"]   += total
+        c["prendas"] += cant
+
+        if subcateg:
+            c["subs"][subcateg] = c["subs"].get(subcateg, 0) + cant
+
+    result = []
+    for key, c in clientes.items():
+        if c["total"] == 0:
+            continue
+
+        coles_serial = {
+            cole: {
+                "total":   d["total"],
+                "prendas": d["prendas"],
+                "docs":    len(d["docs"]),
+            }
+            for cole, d in c["coles"].items()
+        }
+
+        top_subs = sorted(c["subs"].items(), key=lambda x: -x[1])[:5]
+
+        rut_norm = _norm_rut(c["rut"])
+        result.append({
+            "key":     key,
+            "rut":     c["rut"],
+            "nombre":  c["nombre"],
+            "ciudad":  c["ciudad"].strip(),
+            "mail":    personal_mail.get(rut_norm, ""),
+            "celular": personal_cel.get(rut_norm, ""),
+            "coles":   coles_serial,
+            "total":   c["total"],
+            "prendas": c["prendas"],
+            "top_sub": top_subs[0][0] if top_subs else "—",
+            "top_subs": [{"nombre": s, "cant": p} for s, p in top_subs],
+        })
+
+    result.sort(key=lambda x: -x["total"])
+    return result
+
+
 # ── Vista principal ───────────────────────────────────────────────────────────
 
 @app.route("/")
@@ -217,4 +353,5 @@ def index():
         mejores_clientes=report_mejores_clientes(),
         no_compraron=report_no_compraron(),
         modelo_bota=report_modelo_bota(),
+        ficha_clientes=report_ficha_clientes(),
     )
