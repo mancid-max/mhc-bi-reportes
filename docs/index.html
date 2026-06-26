@@ -660,12 +660,14 @@
     <!-- Login overlay -->
     <div id="biLoginOverlay" class="bi-login-overlay" hidden>
       <div class="bi-login-card">
-        <button class="bi-login-close" id="biLoginClose" title="Cerrar">&#x2715;</button>
+        <button class="bi-login-close" id="biLoginClose" title="Cerrar" type="button">&#x2715;</button>
         <div class="bi-login-logo">MJ</div>
         <h3 class="bi-login-title">Acceso Clientes</h3>
-        <input type="email" id="biLoginEmail" class="bi-login-input" placeholder="Email" autocomplete="email">
-        <input type="password" id="biLoginPassword" class="bi-login-input" placeholder="Contraseña" autocomplete="current-password">
-        <button id="biLoginBtn" class="bi-login-btn">Ingresar</button>
+        <form id="biLoginForm" autocomplete="on" onsubmit="return false;">
+          <input type="email" id="biLoginEmail" name="email" class="bi-login-input" placeholder="Email" autocomplete="username">
+          <input type="password" id="biLoginPassword" name="password" class="bi-login-input" placeholder="Contraseña" autocomplete="current-password">
+          <button id="biLoginBtn" class="bi-login-btn" type="submit">Ingresar</button>
+        </form>
         <p id="biLoginError" class="bi-login-error" hidden></p>
       </div>
     </div>
@@ -1140,6 +1142,10 @@ function actualizarUIAuth() {
 }
 
 // Login form handlers
+document.getElementById('biLoginForm')?.addEventListener('submit', async () => {
+  document.getElementById('biLoginBtn')?.click();
+});
+
 document.getElementById('biLoginBtn')?.addEventListener('click', async () => {
   const btn = document.getElementById('biLoginBtn');
   const err = document.getElementById('biLoginError');
