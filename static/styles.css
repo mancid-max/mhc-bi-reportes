@@ -461,6 +461,9 @@ body {
   margin: 0 auto .25rem;
 }
 .bi-login-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+#biLoginForm {
+  display: flex; flex-direction: column; gap: .75rem; width: 100%;
+}
 .bi-login-input {
   width: 100%; padding: .6rem .85rem;
   background: var(--surface); border: 1px solid var(--border);
