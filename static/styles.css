@@ -477,6 +477,14 @@ body {
 }
 .bi-login-btn:hover { opacity: .9; }
 .bi-login-error { font-size: .78rem; color: var(--danger); margin: 0; }
+.bi-login-close {
+  position: absolute; top: .75rem; right: .75rem;
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1rem; cursor: pointer; padding: .25rem .5rem;
+  border-radius: 4px; line-height: 1;
+}
+.bi-login-close:hover { color: var(--text-primary); background: var(--surface); }
+.bi-login-card { position: relative; }
 .bi-user-label { font-size: .78rem; color: var(--text-muted); align-self: center; margin-right: .75rem; }
 #sec-clientes { position: relative; }
 .tag-estado { display: inline-block; padding: .15rem .5rem; border-radius: 4px; font-size: .72rem; font-weight: 600; }

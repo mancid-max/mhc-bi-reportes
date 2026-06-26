@@ -660,6 +660,7 @@
     <!-- Login overlay -->
     <div id="biLoginOverlay" class="bi-login-overlay" hidden>
       <div class="bi-login-card">
+        <button class="bi-login-close" id="biLoginClose" title="Cerrar">&#x2715;</button>
         <div class="bi-login-logo">MJ</div>
         <h3 class="bi-login-title">Acceso Clientes</h3>
         <input type="email" id="biLoginEmail" class="bi-login-input" placeholder="Email" autocomplete="email">
@@ -902,6 +903,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     document.getElementById(btn.dataset.target).hidden = false;
     document.getElementById('sidebar').classList.remove('is-open');
     document.getElementById('sidebarOverlay').classList.remove('is-visible');
+    if (btn.dataset.target === 'sec-clientes') actualizarUIAuth();
   });
 });
 
@@ -1163,6 +1165,19 @@ document.getElementById('biLoginPassword')?.addEventListener('keydown', e => {
 });
 
 document.getElementById('biLogoutBtn')?.addEventListener('click', logoutBI);
+
+function cerrarLoginIrInicio() {
+  document.getElementById('biLoginOverlay').hidden = true;
+  document.querySelectorAll('.report-section').forEach(s => s.hidden = true);
+  document.getElementById('sec-mejores').hidden = false;
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('is-active'));
+  document.querySelector('[data-target="sec-mejores"]')?.classList.add('is-active');
+}
+
+document.getElementById('biLoginClose')?.addEventListener('click', cerrarLoginIrInicio);
+document.getElementById('biLoginOverlay')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('biLoginOverlay')) cerrarLoginIrInicio();
+});
 
 function initClientes() {
   actualizarUIAuth();
