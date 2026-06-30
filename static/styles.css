@@ -265,7 +265,15 @@ body {
 .chart-wrap { height: 260px; position: relative; }
 
 /* ─────────────────── Table tools ─────────────────── */
-.table-tools { margin-bottom: .65rem; }
+.table-tools { margin-bottom: .65rem; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.btn-export {
+  padding: .45rem 1rem; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text-primary); font-size: .82rem;
+  cursor: pointer; white-space: nowrap;
+  transition: background .15s, border-color .15s;
+}
+.btn-export:hover { background: var(--accent); color: #111; border-color: var(--accent); }
 .table-tools input {
   background: var(--card-bg);
   border: 1px solid var(--border);
