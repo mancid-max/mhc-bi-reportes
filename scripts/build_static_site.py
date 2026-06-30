@@ -11,7 +11,10 @@ def _sync_bi_to_seed() -> None:
     if not BI_DIR.exists():
         print("Z:\\BI no disponible, usando seed existente.")
         return
-    for bi_name, seed_name in [("VENTAS-TOD-2026.CSV", "VENTAS-TOD-2026.CSV")]:
+    for bi_name, seed_name in [
+        ("VENTAS-TOD-2026.CSV",        "VENTAS-TOD-2026.CSV"),
+        ("ESTADO DE RESULTADO 2026.CSV", "ESTADO DE RESULTADO 2026.CSV"),
+    ]:
         src = BI_DIR / bi_name
         dst = SEED_DIR / seed_name
         if src.exists() and src.stat().st_size > 0:

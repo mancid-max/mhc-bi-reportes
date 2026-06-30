@@ -404,6 +404,106 @@ def report_ficha_clientes() -> list:
     return result
 
 
+# ── Reporte 5: Estado de Resultado ───────────────────────────────────────────
+
+MESES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+         "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
+
+# Secciones principales que queremos mostrar (LIN de 2 dígitos)
+SECCIONES_PRINCIPALES = {
+    "01": "Ingresos",
+    "02": "Costo Explotación",
+    "03": "Margen Bruto",
+    "04": "Gastos Administración",
+    "05": "Gastos Ventas",
+    "09": "Resultado Operacional",
+    "18": "Utilidad antes Impuestos",
+    "20": "Utilidad / Pérdida",
+}
+
+
+def _estado_path() -> Path:
+    p = BI_DIR / "ESTADO DE RESULTADO 2026.CSV"
+    if p.exists() and p.stat().st_size > 0:
+        return p
+    return SEED_DIR / "ESTADO DE RESULTADO 2026.CSV"
+
+
+def report_estado_resultado() -> dict:
+    path = _estado_path()
+    empty = {"available": False, "secciones": [], "meses_activos": [], "kpis": {}}
+    if not path.exists():
+        return empty
+
+    secciones: dict[str, dict] = {}
+
+    for enc in ("utf-8-sig", "cp1252", "latin-1"):
+        try:
+            with open(path, encoding=enc, errors="replace") as f:
+                lineas = f.readlines()
+            break
+        except Exception:
+            continue
+    else:
+        return empty
+
+    for linea in lineas:
+        cols = linea.rstrip("\n").split(";")
+        if len(cols) < 14:
+            continue
+        lin  = str(cols[1]).strip()
+        nombre = str(cols[2]).strip()
+        if lin not in SECCIONES_PRINCIPALES:
+            continue
+
+        valores_mes = []
+        for i, mes in enumerate(MESES):
+            try:
+                valores_mes.append(int(str(cols[3 + i]).strip() or "0"))
+            except Exception:
+                valores_mes.append(0)
+
+        try:
+            acumulado = int(str(cols[15]).strip() or "0")
+        except Exception:
+            acumulado = sum(valores_mes)
+
+        secciones[lin] = {
+            "lin":       lin,
+            "label":     SECCIONES_PRINCIPALES[lin],
+            "nombre":    nombre,
+            "meses":     valores_mes,
+            "acumulado": acumulado,
+        }
+
+    if not secciones:
+        return empty
+
+    # Meses con datos (al menos ingresos > 0)
+    ingresos_meses = secciones.get("01", {}).get("meses", [0] * 12)
+    meses_activos = [MESES[i] for i, v in enumerate(ingresos_meses) if v != 0]
+
+    secciones_list = [secciones[k] for k in sorted(secciones.keys()) if k in secciones]
+
+    kpis = {
+        "ingresos":   secciones.get("01", {}).get("acumulado", 0),
+        "costo":      secciones.get("02", {}).get("acumulado", 0),
+        "margen":     secciones.get("03", {}).get("acumulado", 0),
+        "resultado":  secciones.get("09", {}).get("acumulado", 0),
+        "utilidad":   secciones.get("20", {}).get("acumulado", 0),
+    }
+
+    return {
+        "available":     True,
+        "secciones":     secciones_list,
+        "meses_activos": meses_activos,
+        "kpis":          kpis,
+        "ingresos_mes":  ingresos_meses,
+        "resultado_mes": secciones.get("09", {}).get("meses", [0] * 12),
+        "margen_mes":    secciones.get("03", {}).get("meses", [0] * 12),
+    }
+
+
 # ── Vista principal ───────────────────────────────────────────────────────────
 
 @app.route("/")
@@ -414,4 +514,5 @@ def index():
         no_compraron=report_no_compraron(),
         modelo_bota=report_modelo_bota(),
         ficha_clientes=report_ficha_clientes(),
+        estado_resultado=report_estado_resultado(),
     )

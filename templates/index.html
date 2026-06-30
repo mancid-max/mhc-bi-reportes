@@ -43,6 +43,10 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.029 10 8 10c-2.03 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
       Clientes
     </button>
+    <button class="nav-item" data-target="sec-estado">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/></svg>
+      Estado Resultado
+    </button>
   </nav>
   <div class="sidebar-footer">
     <div class="season-label">Colecciones</div>
@@ -362,6 +366,107 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- ── ESTADO DE RESULTADO ── -->
+  <section id="sec-estado" class="report-section" hidden>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Estado de Resultado 2026</h1>
+        <p class="page-sub">Pérdidas y Ganancias acumulado · {% if estado_resultado.available %}{{ estado_resultado.meses_activos | join(', ') | title }}{% else %}Sin datos{% endif %}</p>
+      </div>
+    </div>
+
+    {% if estado_resultado.available %}
+    {% set kpis = estado_resultado.kpis %}
+    <div class="kpi-row" style="grid-template-columns: repeat(5,1fr)">
+      <div class="kpi-card kpi-card--accent">
+        <div class="kpi-label">Ingresos</div>
+        <div class="kpi-value" style="font-size:1.1rem">${{ "{:,.0f}".format(kpis.ingresos).replace(",",".") }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo Explotación</div>
+        <div class="kpi-value" style="font-size:1.1rem">${{ "{:,.0f}".format(kpis.costo).replace(",",".") }}</div>
+      </div>
+      <div class="kpi-card {% if kpis.margen >= 0 %}kpi-card--accent{% else %}kpi-card--danger{% endif %}">
+        <div class="kpi-label">Margen Bruto</div>
+        <div class="kpi-value" style="font-size:1.1rem">${{ "{:,.0f}".format(kpis.margen).replace(",",".") }}</div>
+      </div>
+      <div class="kpi-card {% if kpis.resultado >= 0 %}kpi-card--accent{% else %}kpi-card--danger{% endif %}">
+        <div class="kpi-label">Resultado Operacional</div>
+        <div class="kpi-value" style="font-size:1.1rem">${{ "{:,.0f}".format(kpis.resultado).replace(",",".") }}</div>
+      </div>
+      <div class="kpi-card {% if kpis.utilidad >= 0 %}kpi-card--accent{% else %}kpi-card--danger{% endif %}">
+        <div class="kpi-label">Utilidad / Pérdida</div>
+        <div class="kpi-value" style="font-size:1.1rem">${{ "{:,.0f}".format(kpis.utilidad).replace(",",".") }}</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-title">Ingresos vs Costo vs Resultado Operacional — Por Mes</div>
+      <div class="chart-wrap"><canvas id="chartEstado"></canvas></div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:1.5rem">
+      <table class="bi-table">
+        <thead>
+          <tr>
+            <th>Sección</th>
+            {% for mes in estado_resultado.meses_activos %}<th class="num">{{ mes | title }}</th>{% endfor %}
+            <th class="num">Acumulado</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for sec in estado_resultado.secciones %}
+        <tr {% if sec.lin in ['03','09','20'] %}class="er-total-row"{% endif %}>
+          <td><strong>{{ sec.label }}</strong></td>
+          {% for i in range(estado_resultado.meses_activos | length) %}
+          <td class="num {% if sec.meses[i] < 0 %}val-neg{% endif %}">
+            ${{ "{:,.0f}".format(sec.meses[i]).replace(",",".") }}
+          </td>
+          {% endfor %}
+          <td class="num {% if sec.acumulado < 0 %}val-neg{% endif %}">
+            <strong>${{ "{:,.0f}".format(sec.acumulado).replace(",",".") }}</strong>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+    (function() {
+      const meses = {{ estado_resultado.meses_activos | tojson }};
+      const ingresos  = {{ estado_resultado.ingresos_mes[:estado_resultado.meses_activos|length] | tojson }};
+      const costos    = {{ estado_resultado.resultado_mes[:estado_resultado.meses_activos|length] | tojson }};
+      const margen    = {{ estado_resultado.margen_mes[:estado_resultado.meses_activos|length] | tojson }};
+      const ctx = document.getElementById('chartEstado');
+      if (!ctx) return;
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: meses.map(m => m.charAt(0) + m.slice(1).toLowerCase()),
+          datasets: [
+            { label: 'Ingresos', data: ingresos, backgroundColor: 'rgba(200,168,75,.7)', borderRadius: 4 },
+            { label: 'Margen Bruto', data: margen, backgroundColor: 'rgba(86,180,233,.6)', borderRadius: 4 },
+            { label: 'Resultado Operacional', data: costos, type: 'line', borderColor: '#d13438', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 4, tension: .3 },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#a19f9d', font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: '#797775' }, grid: { color: 'rgba(255,255,255,.04)' } },
+            y: { ticks: { color: '#797775', callback: v => '$' + (v/1000000).toFixed(1) + 'M' }, grid: { color: 'rgba(255,255,255,.06)' } }
+          }
+        }
+      });
+    })();
+    </script>
+
+    {% else %}
+    <div class="empty-state">Sin datos — archivo ESTADO DE RESULTADO 2026.CSV no disponible.</div>
+    {% endif %}
   </section>
 
 </main>

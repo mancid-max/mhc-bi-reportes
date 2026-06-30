@@ -43,6 +43,10 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.029 10 8 10c-2.03 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
       Clientes
     </button>
+    <button class="nav-item" data-target="sec-estado">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0h1v15h15v1H0V0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/></svg>
+      Estado Resultado
+    </button>
   </nav>
   <div class="sidebar-footer">
     <div class="season-label">Colecciones</div>
@@ -768,6 +772,317 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- ── ESTADO DE RESULTADO ── -->
+  <section id="sec-estado" class="report-section" hidden>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Estado de Resultado 2026</h1>
+        <p class="page-sub">Pérdidas y Ganancias acumulado · Enero, Febrero, Marzo, Abril, Mayo</p>
+      </div>
+    </div>
+
+    
+    
+    <div class="kpi-row" style="grid-template-columns: repeat(5,1fr)">
+      <div class="kpi-card kpi-card--accent">
+        <div class="kpi-label">Ingresos</div>
+        <div class="kpi-value" style="font-size:1.1rem">$700.452.333</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo Explotación</div>
+        <div class="kpi-value" style="font-size:1.1rem">$425.307.836</div>
+      </div>
+      <div class="kpi-card kpi-card--accent">
+        <div class="kpi-label">Margen Bruto</div>
+        <div class="kpi-value" style="font-size:1.1rem">$275.144.497</div>
+      </div>
+      <div class="kpi-card kpi-card--danger">
+        <div class="kpi-label">Resultado Operacional</div>
+        <div class="kpi-value" style="font-size:1.1rem">$-130.097.513</div>
+      </div>
+      <div class="kpi-card kpi-card--accent">
+        <div class="kpi-label">Utilidad / Pérdida</div>
+        <div class="kpi-value" style="font-size:1.1rem">$22.083.458</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-title">Ingresos vs Costo vs Resultado Operacional — Por Mes</div>
+      <div class="chart-wrap"><canvas id="chartEstado"></canvas></div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:1.5rem">
+      <table class="bi-table">
+        <thead>
+          <tr>
+            <th>Sección</th>
+            <th class="num">Enero</th><th class="num">Febrero</th><th class="num">Marzo</th><th class="num">Abril</th><th class="num">Mayo</th>
+            <th class="num">Acumulado</th>
+          </tr>
+        </thead>
+        <tbody>
+        
+        <tr >
+          <td><strong>Ingresos</strong></td>
+          
+          <td class="num ">
+            $55.250.175
+          </td>
+          
+          <td class="num ">
+            $132.230.937
+          </td>
+          
+          <td class="num ">
+            $219.871.379
+          </td>
+          
+          <td class="num ">
+            $184.114.530
+          </td>
+          
+          <td class="num ">
+            $108.985.312
+          </td>
+          
+          <td class="num ">
+            <strong>$700.452.333</strong>
+          </td>
+        </tr>
+        
+        <tr >
+          <td><strong>Costo Explotación</strong></td>
+          
+          <td class="num ">
+            $148.923.086
+          </td>
+          
+          <td class="num ">
+            $21.662.322
+          </td>
+          
+          <td class="num ">
+            $72.679.017
+          </td>
+          
+          <td class="num ">
+            $104.569.746
+          </td>
+          
+          <td class="num ">
+            $77.473.665
+          </td>
+          
+          <td class="num ">
+            <strong>$425.307.836</strong>
+          </td>
+        </tr>
+        
+        <tr class="er-total-row">
+          <td><strong>Margen Bruto</strong></td>
+          
+          <td class="num val-neg">
+            $-93.672.911
+          </td>
+          
+          <td class="num ">
+            $110.568.615
+          </td>
+          
+          <td class="num ">
+            $147.192.362
+          </td>
+          
+          <td class="num ">
+            $79.544.784
+          </td>
+          
+          <td class="num ">
+            $31.511.647
+          </td>
+          
+          <td class="num ">
+            <strong>$275.144.497</strong>
+          </td>
+        </tr>
+        
+        <tr >
+          <td><strong>Gastos Administración</strong></td>
+          
+          <td class="num ">
+            $101.013.485
+          </td>
+          
+          <td class="num ">
+            $74.862.472
+          </td>
+          
+          <td class="num ">
+            $77.776.667
+          </td>
+          
+          <td class="num ">
+            $81.168.657
+          </td>
+          
+          <td class="num ">
+            $54.295.192
+          </td>
+          
+          <td class="num ">
+            <strong>$392.070.959</strong>
+          </td>
+        </tr>
+        
+        <tr >
+          <td><strong>Gastos Ventas</strong></td>
+          
+          <td class="num ">
+            $2.310.213
+          </td>
+          
+          <td class="num ">
+            $1.536.944
+          </td>
+          
+          <td class="num ">
+            $2.897.933
+          </td>
+          
+          <td class="num ">
+            $1.736.079
+          </td>
+          
+          <td class="num ">
+            $1.927.359
+          </td>
+          
+          <td class="num ">
+            <strong>$10.416.528</strong>
+          </td>
+        </tr>
+        
+        <tr class="er-total-row">
+          <td><strong>Resultado Operacional</strong></td>
+          
+          <td class="num val-neg">
+            $-196.996.609
+          </td>
+          
+          <td class="num ">
+            $34.169.199
+          </td>
+          
+          <td class="num ">
+            $66.517.762
+          </td>
+          
+          <td class="num val-neg">
+            $-6.114.475
+          </td>
+          
+          <td class="num val-neg">
+            $-24.710.904
+          </td>
+          
+          <td class="num val-neg">
+            <strong>$-130.097.513</strong>
+          </td>
+        </tr>
+        
+        <tr >
+          <td><strong>Utilidad antes Impuestos</strong></td>
+          
+          <td class="num val-neg">
+            $-181.522.998
+          </td>
+          
+          <td class="num ">
+            $49.418.009
+          </td>
+          
+          <td class="num ">
+            $73.983.449
+          </td>
+          
+          <td class="num ">
+            $90.879.944
+          </td>
+          
+          <td class="num val-neg">
+            $-9.525.597
+          </td>
+          
+          <td class="num ">
+            <strong>$22.083.458</strong>
+          </td>
+        </tr>
+        
+        <tr class="er-total-row">
+          <td><strong>Utilidad / Pérdida</strong></td>
+          
+          <td class="num val-neg">
+            $-181.522.998
+          </td>
+          
+          <td class="num ">
+            $49.418.009
+          </td>
+          
+          <td class="num ">
+            $73.983.449
+          </td>
+          
+          <td class="num ">
+            $90.879.944
+          </td>
+          
+          <td class="num val-neg">
+            $-9.525.597
+          </td>
+          
+          <td class="num ">
+            <strong>$22.083.458</strong>
+          </td>
+        </tr>
+        
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+    (function() {
+      const meses = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO"];
+      const ingresos  = [55250175, 132230937, 219871379, 184114530, 108985312];
+      const costos    = [-196996609, 34169199, 66517762, -6114475, -24710904];
+      const margen    = [-93672911, 110568615, 147192362, 79544784, 31511647];
+      const ctx = document.getElementById('chartEstado');
+      if (!ctx) return;
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: meses.map(m => m.charAt(0) + m.slice(1).toLowerCase()),
+          datasets: [
+            { label: 'Ingresos', data: ingresos, backgroundColor: 'rgba(200,168,75,.7)', borderRadius: 4 },
+            { label: 'Margen Bruto', data: margen, backgroundColor: 'rgba(86,180,233,.6)', borderRadius: 4 },
+            { label: 'Resultado Operacional', data: costos, type: 'line', borderColor: '#d13438', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 4, tension: .3 },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#a19f9d', font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: '#797775' }, grid: { color: 'rgba(255,255,255,.04)' } },
+            y: { ticks: { color: '#797775', callback: v => '$' + (v/1000000).toFixed(1) + 'M' }, grid: { color: 'rgba(255,255,255,.06)' } }
+          }
+        }
+      });
+    })();
+    </script>
+
+    
   </section>
 
 </main>
