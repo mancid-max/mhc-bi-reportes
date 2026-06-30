@@ -652,3 +652,7 @@ body {
   #tablaModelo th:nth-child(5), #tablaModelo td:nth-child(5) { width: 12%; }
   #tablaModelo th:nth-child(6), #tablaModelo td:nth-child(6) { width: 12%; }
 }
+
+/* ── Estado de Resultado ── */
+.val-neg { color: var(--danger) !important; }
+.er-total-row td { background: rgba(200,168,75,.07); font-weight: 600; border-top: 1px solid var(--accent-border); }
