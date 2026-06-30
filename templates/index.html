@@ -123,6 +123,9 @@
       <div>
         <h1 class="page-title">Clientes que No Compraron</h1>
       </div>
+      {% if no_compraron.available %}
+      <button class="btn-export" onclick="exportarNoCompraron()">&#8595; Descargar CSV</button>
+      {% endif %}
     </div>
 
     {% if no_compraron.available %}
@@ -135,7 +138,6 @@
     </div>
     <div class="table-tools">
       <input type="text" id="searchNoCompraron" placeholder="Buscar cliente o RUT..." autocomplete="off">
-      <button class="btn-export" onclick="exportarNoCompraron()">&#8595; Descargar CSV</button>
     </div>
     <div class="table-wrap">
       <table id="tablaNoCompraron" class="bi-table">
